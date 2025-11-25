@@ -2,14 +2,17 @@ import flet as ft
 import difflib
 
 
+FONT_SIZE=12
+CONTAINER_HEIGHT=FONT_SIZE+32
+
 def main(page: ft.Page):
     page.title = "Diff Checker"
     page.theme_mode = ft.ThemeMode.DARK
     page.window_width = 1000
     page.window_height = 700
 
-    input1 = ft.TextField(label="Text 1", multiline=True, expand=True)
-    input2 = ft.TextField(label="Text 2", multiline=True, expand=True)
+    input1 = ft.TextField(label="Text 1", multiline=True, expand=True, min_lines=20,border_color=ft.Colors.LIGHT_BLUE_ACCENT_100)
+    input2 = ft.TextField(label="Text 2", multiline=True, expand=True, min_lines=20,border_color=ft.Colors.LIGHT_BLUE_ACCENT_100)
 
     input_panel = ft.Row([input1, input2], expand=True)
     diff_panel = ft.Row([], expand=True)
@@ -18,7 +21,16 @@ def main(page: ft.Page):
     def show_input():
         container.controls.clear()
         container.controls.append(input_panel)
-        container.controls.append(ft.ElevatedButton("Compare", on_click=compare_diff))
+        container.controls.append(
+                ft.Row(
+                    controls=[
+                    ft.ElevatedButton("Compare", on_click=compare_diff, scale=1.3)
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    height=80
+                    )
+                )
         page.update()
 
     def show_diff():
@@ -42,26 +54,26 @@ def main(page: ft.Page):
 
         def make_line(text, num, bgcolor):
             return ft.Container(
-                height=36,
+                height=CONTAINER_HEIGHT,
                 bgcolor=bgcolor,
-                padding=6,
+                padding=0,
                 content=ft.Row([
-                    ft.Text(f"{num:>3}", width=30, color=ft.Colors.GREY),
-                    ft.Text(text, selectable=True, no_wrap=True, style=ft.TextStyle(size=14, height=1.2)),
+                    ft.Text(f"{num:>3}", width=30, color=ft.Colors.GREY,style=ft.TextStyle(size=FONT_SIZE, height=1.2)),
+                    ft.Text(text, selectable=True, no_wrap=True, style=ft.TextStyle(size=FONT_SIZE, height=1.2)),
                 ])
             )
 
         def make_empty_line():
-            return ft.Container(height=36)
+            return ft.Container(height=CONTAINER_HEIGHT)
 
         for line in diff:
             if line.startswith("-"):
-                diff_area_left.controls.append(make_line(line, line_num_left, "#5c2b2b"))
-                diff_area_right.controls.append(make_empty_line())
+                diff_area_left.controls.append(make_line(line, line_num_left, "#D20103"))
+                #diff_area_right.controls.append(make_empty_line())
                 line_num_left += 1
             elif line.startswith("+"):
-                diff_area_right.controls.append(make_line(line, line_num_right, "#2e5940"))
-                diff_area_left.controls.append(make_empty_line())
+                diff_area_right.controls.append(make_line(line, line_num_right, "#52A730"))
+                #diff_area_left.controls.append(make_empty_line())
                 line_num_right += 1
             elif line.startswith(" "):
                 diff_area_left.controls.append(make_line(line, line_num_left, None))
@@ -75,7 +87,7 @@ def main(page: ft.Page):
         ], expand=1))
 
         diff_panel.controls.append(ft.Column([
-            ft.Text("Additions", color=ft.Colors.GREEN),
+            ft.Text("Additions", color=ft.Colors.GREEN_ACCENT_400),
             diff_area_right
         ], expand=1))
 
