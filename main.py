@@ -1,0 +1,88 @@
+import flet as ft
+import difflib
+
+
+def main(page: ft.Page):
+    page.title = "Diff Checker"
+    page.theme_mode = ft.ThemeMode.DARK
+    page.window_width = 1000
+    page.window_height = 700
+
+    input1 = ft.TextField(label="Text 1", multiline=True, expand=True)
+    input2 = ft.TextField(label="Text 2", multiline=True, expand=True)
+
+    input_panel = ft.Row([input1, input2], expand=True)
+    diff_panel = ft.Row([], expand=True)
+    container = ft.Column(controls=[], expand=True)
+
+    def show_input():
+        container.controls.clear()
+        container.controls.append(input_panel)
+        container.controls.append(ft.ElevatedButton("Compare", on_click=compare_diff))
+        page.update()
+
+    def show_diff():
+        container.controls.clear()
+        container.controls.append(ft.ElevatedButton("Back", on_click=lambda e: show_input()))
+        container.controls.append(diff_panel)
+        page.update()
+
+    def compare_diff(e):
+        diff_panel.controls.clear()
+        diff_area_left = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
+        diff_area_right = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
+
+        text1_lines = input1.value.splitlines()
+        text2_lines = input2.value.splitlines()
+
+        diff = list(difflib.ndiff(text1_lines, text2_lines))
+
+        line_num_left = 1
+        line_num_right = 1
+
+        def make_line(text, num, bgcolor):
+            return ft.Container(
+                height=36,
+                bgcolor=bgcolor,
+                padding=6,
+                content=ft.Row([
+                    ft.Text(f"{num:>3}", width=30, color=ft.Colors.GREY),
+                    ft.Text(text, selectable=True, no_wrap=True, style=ft.TextStyle(size=14, height=1.2)),
+                ])
+            )
+
+        def make_empty_line():
+            return ft.Container(height=36)
+
+        for line in diff:
+            if line.startswith("-"):
+                diff_area_left.controls.append(make_line(line, line_num_left, "#5c2b2b"))
+                diff_area_right.controls.append(make_empty_line())
+                line_num_left += 1
+            elif line.startswith("+"):
+                diff_area_right.controls.append(make_line(line, line_num_right, "#2e5940"))
+                diff_area_left.controls.append(make_empty_line())
+                line_num_right += 1
+            elif line.startswith(" "):
+                diff_area_left.controls.append(make_line(line, line_num_left, None))
+                diff_area_right.controls.append(make_line(line, line_num_right, None))
+                line_num_left += 1
+                line_num_right += 1
+
+        diff_panel.controls.append(ft.Column([
+            ft.Text("Removals", color=ft.Colors.RED),
+            diff_area_left
+        ], expand=1))
+
+        diff_panel.controls.append(ft.Column([
+            ft.Text("Additions", color=ft.Colors.GREEN),
+            diff_area_right
+        ], expand=1))
+
+        show_diff()
+
+    show_input()
+    page.add(container)
+
+
+ft.app(target=main)
